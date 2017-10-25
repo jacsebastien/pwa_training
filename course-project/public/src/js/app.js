@@ -7,7 +7,7 @@ if('serviceWorker' in navigator) {
     .then(() => {
         console.log('Service worker registered!');
     })
-    .catch((err) => {
+    .catch(err => {
         console.log(err);
     });
 }
@@ -22,24 +22,73 @@ window.addEventListener('beforeinstallprompt', (event) => {
     return false;
 });
 
-var promise = new Promise((resolve, reject) => {
-    setTimeout(() => {
-        // resolve("This is executed once the timer is done!");
-        reject({code: 500, message: "An error occured"});
-    }, 3000);
-});
+// var promise = new Promise((resolve, reject) => {
+//     setTimeout(() => {
+//         // resolve("This is executed once the timer is done!");
+//         reject({code: 500, message: "An error occured"});
+//     }, 3000);
+// });
 
-promise
-.then((result) => {
-    return result;
-})
-// we can chain then()
-.then((newResult) => {
-    console.log(newResult)
-})
-// catch any errors occured in any steos before this
-.catch((err) => {
-    console.log(err.code, err.message);    
-});
+// promise
+// .then(result => {
+//     return result;
+// })
+// // we can chain then()
+// .then(newResult => {
+//     console.log(newResult)
+// })
+// // catch any errors occured in any steos before this
+// .catch(err => {
+//     console.log(err.code, err.message);    
+// });
 
-console.log("This is executed right after setTimeout");
+// console.log("This is executed right after setTimeout");
+
+// AJAX request (not working with Service Workers)
+var xhr = new XMLHttpRequest();
+xhr.open('GET', 'http://httpbin.org/ip');
+xhr.responseType = 'json';
+
+xhr.onload = function() {
+    console.log(xhr.response);
+};
+
+xhr.onerror = function() {
+    console.log('Error!');
+}
+
+xhr.send();
+
+// GET data
+// fetch('http://httpbin.org/ip')
+// .then(response => {
+//     console.log("Fetch response: ", response);
+//     return response.json();
+// })
+// .then(data => {
+//     console.log("Parsed data: ", data);
+// })
+// .catch(error => {
+//     console.log("Fetch error: ", error);
+// });
+
+// POST data
+fetch('http://httpbin.org/post', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    },
+    mode: 'cors', // can set "no-cors"
+    body: JSON.stringify({message: "Does this work?"})
+})
+.then(response => {
+    console.log("Fetch response: ", response);
+    return response.json();
+})
+.then(data => {
+    console.log("Parsed data: ", data);
+})
+.catch(error => {
+    console.log("Fetch error: ", error);
+});
