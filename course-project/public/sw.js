@@ -12,7 +12,7 @@ self.addEventListener('activate', (event) => {
 
 // when html page load resources (css/script/images) or when we manually send fetch request from js
 self.addEventListener('fetch', (event) => {
-    console.log('[Service Worker] Fetching something ...', event);
+    // console.log('[Service Worker] Fetching something ...', event);
     // intercept fetch event and override it
     event.respondWith(fetch(event.request));
 });
