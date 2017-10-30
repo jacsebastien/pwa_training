@@ -1,29 +1,25 @@
 var shareImageButton = document.querySelector('#share-image-button');
 var createPostArea = document.querySelector('#create-post');
 var closeCreatePostModalButton = document.querySelector('#close-create-post-modal-btn');
+var sharedMomentsArea = document.querySelector('#shared-moments');
 
 function openCreatePostModal() {
-    createPostArea.style.display = 'block';
+  createPostArea.style.display = 'block';
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
 
-    // show the Chrome install banner when the user click on "+" button 
-    // only if Chrome already tried to show it (stored in defferedPrompt var in app.js)
-    if(defferedPrompt) {
-        defferedPrompt.prompt();
+    deferredPrompt.userChoice.then(function(choiceResult) {
+      console.log(choiceResult.outcome);
 
-        defferedPrompt.userChoice.then((choiceResult) => {
-            console.log(choiceResult.outcome);
+      if (choiceResult.outcome === 'dismissed') {
+        console.log('User cancelled installation');
+      } else {
+        console.log('User added to home screen');
+      }
+    });
 
-            // if user clicked the close button
-            if(choiceResult.outcome === 'dismissed') {
-                console.log("User cancelled installation");
-            } else {
-                console.log("User added to home screen");
-            }
-
-            // clear defferedPrompt after using it to avoid call on each button click
-            defferedPrompt = null;
-        });
-    }
+    deferredPrompt = null;
+  }
 }
 
 function closeCreatePostModal() {
@@ -33,3 +29,35 @@ function closeCreatePostModal() {
 shareImageButton.addEventListener('click', openCreatePostModal);
 
 closeCreatePostModalButton.addEventListener('click', closeCreatePostModal);
+
+// create html element with dummmy data
+function createCard() {
+  var cardWrapper = document.createElement('div');
+  cardWrapper.className = 'shared-moment-card mdl-card mdl-shadow--2dp';
+  var cardTitle = document.createElement('div');
+  cardTitle.className = 'mdl-card__title';
+  cardTitle.style.backgroundImage = 'url("/src/images/sf-boat.jpg")';
+  cardTitle.style.backgroundSize = 'cover';
+  cardTitle.style.height = '180px';
+  cardWrapper.appendChild(cardTitle);
+  var cardTitleTextElement = document.createElement('h2');
+  cardTitleTextElement.className = 'mdl-card__title-text';
+  cardTitleTextElement.textContent = 'San Francisco Trip';
+  cardTitle.appendChild(cardTitleTextElement);
+  var cardSupportingText = document.createElement('div');
+  cardSupportingText.className = 'mdl-card__supporting-text';
+  cardSupportingText.textContent = 'In San Francisco';
+  cardSupportingText.style.textAlign = 'center';
+  cardWrapper.appendChild(cardSupportingText);
+  componentHandler.upgradeElement(cardWrapper);
+  sharedMomentsArea.appendChild(cardWrapper);
+}
+
+// create a card with dummy data for each http response (to have server connection)
+fetch('https://httpbin.org/get')
+  .then(function(res) {
+    return res.json();
+  })
+  .then(function(data) {
+    createCard();
+  });
