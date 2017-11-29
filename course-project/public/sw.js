@@ -1,6 +1,14 @@
 // access to the service workers with "self"
 self.addEventListener('install', (event) => {
     console.log('[Service Worker] Installing Service Workers ...', event);
+    // wait until caches has finished before continuing
+    event.waitUntil(
+        // open a new cache if exists or create a new one and name it like we want
+        caches.open('static')
+        .then((cache) => {
+            console.log('[Service Worker] Precaching App Shell');
+        })
+    );
 });
 
 // need to close the tab or unregister to activate sw
