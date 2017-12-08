@@ -4,7 +4,8 @@ self.addEventListener('install', (event) => {
     // wait until caches has finished before continuing because caches is a promise to avoid continuing before it's done
     event.waitUntil(
         // open a new cache if exists or create a new one and name it like we want
-        caches.open('static')
+        // give version number to cache and update it each time the application's code is edited to force refresh
+        caches.open('static-v2')
         .then((cache) => {
             console.log('[Service Worker] Precaching App Shell');
             // add path to the files that need to be stored in the cache (relative from web root file)
@@ -51,7 +52,21 @@ self.addEventListener('fetch', (event) => {
                 return response;
             } else {
                 // if not found, continue with original network request
-                return fetch(event.request);
+                return fetch(event.request)
+                .then(res => {
+                    // dynamic store request in cache
+                    return caches.open('dynamic')
+                    .then(cache => {
+                        // res is instant consumed so it will be null, 
+                        // use clone to get an clone of it with all data
+                        cache.put(event.request.url, res.clone());
+                        // return original res anyway
+                        return res
+                    })
+                })
+                .catch(error => {
+                    
+                });
             }
         })
     );
