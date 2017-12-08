@@ -44,6 +44,12 @@ function onSaveButtonClicked(event) {
     }
 }
 
+function clearCards() {
+    while(sharedMomentsArea.hasChildNodes()) {
+        sharedMomentsArea.removeChild(sharedMomentsArea.lastChild)
+    }
+}
+
 // create html element with dummmy data
 function createCard() {
   var cardWrapper = document.createElement('div');
@@ -78,10 +84,35 @@ function createCard() {
 }
 
 // create a card with dummy data for each http response (to have server connection)
-fetch('https://httpbin.org/get')
-  .then(function(res) {
+
+var url = 'https://httpbin.org/get';
+var isFromNetwork = false;
+
+fetch(url)
+.then(function(res) {
     return res.json();
-  })
-  .then(function(data) {
+})
+.then(function(data) {
+    isFromNetwork = true;
+    console.log("Data from web: ", data);
+    clearCards();
     createCard();
-  });
+});
+
+if('caches' in window) {
+    // try to find the request in cache first
+    caches.match(url)
+    .then(response => {
+        // if found, return it
+        if(response) {
+            return response.json();
+        }
+    })
+    .then(data => {
+        console.log("Data from cache: ", data);    
+        if(!isFromNetwork) {
+            clearCards();    
+            createCard();
+        }
+    })
+}

@@ -1,4 +1,4 @@
-const CACHE_STATIC_NAME = 'static-v10.1';
+const CACHE_STATIC_NAME = 'static-v12';
 const CACHE_DYNAMIC_NAME = 'dynamic-v2';
 
 // access to the service workers with "self"
