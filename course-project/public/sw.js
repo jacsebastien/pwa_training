@@ -53,43 +53,76 @@ self.addEventListener('activate', (event) => {
     return self.clients.claim();
 });
 
+// Cache with network fallback strategy
 // triggered each time page try to load resources (css/script/images) 
 // or when we manually send fetch request from js
+// self.addEventListener('fetch', (event) => {
+//     // intercept fetch event and override it
+//     event.respondWith(
+//         // fetch data from cache if available
+//         // caches refer to the all chache storage
+//         // the key of cache is a request
+//         caches.match(event.request) 
+//         .then((response) => {
+//             // response = null if no cache found
+//             if(response) {
+//                 // get it from cache if exists
+//                 return response;
+//             } else {
+//                 // if not found, continue with original network request
+//                 return fetch(event.request)
+//                 .then(res => {
+//                     // dynamic store request in cache
+//                     return caches.open(CACHE_DYNAMIC_NAME)
+//                     .then(cache => {
+//                         // res is instant consumed so it will be null, 
+//                         // use clone to get an clone of it with all data
+//                         cache.put(event.request.url, res.clone());
+//                         // return original res anyway
+//                         return res
+//                     })
+//                 })
+//                 // if data can't be fetch
+//                 .catch(error => {
+//                     // return the offline page which is cached
+//                     return caches.open(CACHE_STATIC_NAME)
+//                     .then(cache => {
+//                         return cache.match('/offline.html');
+//                     });
+//                 });
+//             }
+//         })
+//     );
+// });
+
+// Network with cache fallback strategy
 self.addEventListener('fetch', (event) => {
-    // intercept fetch event and override it
     event.respondWith(
-        // fetch data from cache if available
-        // caches refer to the all chache storage
-        // the key of cache is a request
-        caches.match(event.request) 
-        .then((response) => {
-            // response = null if no cache found
-            if(response) {
-                // get it from cache if exists
-                return response;
-            } else {
-                // if not found, continue with original network request
-                return fetch(event.request)
-                .then(res => {
-                    // dynamic store request in cache
-                    return caches.open(CACHE_DYNAMIC_NAME)
-                    .then(cache => {
-                        // res is instant consumed so it will be null, 
-                        // use clone to get an clone of it with all data
-                        cache.put(event.request.url, res.clone());
-                        // return original res anyway
-                        return res
-                    })
-                })
-                // if data can't be fetch
-                .catch(error => {
-                    // return the offline page which is cached
-                    return caches.open(CACHE_STATIC_NAME)
-                    .then(cache => {
-                        return cache.match('/offline.html');
-                    });
-                });
-            }
+        fetch(event.request)
+        .then(response => {
+            return caches.open(CACHE_DYNAMIC_NAME)
+            .then(cache => {
+                cache.put(event.request.url, res.clone());
+                return res
+            })
+        })
+        .catch(err => {
+            return caches.match(event.request)
         })
     );
 });
+
+
+// Cache only strategy
+// self.addEventListener('fetch', (event) => {
+//     event.respondWith(
+//         caches.match(event.request)
+//     );
+// });
+
+// Network only strategy
+// self.addEventListener('fetch', (event) => {
+//     event.respondWith(
+//         fetch(event.request)
+//     );
+// });
