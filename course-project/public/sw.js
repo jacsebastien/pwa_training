@@ -1,4 +1,4 @@
-const CACHE_STATIC_NAME = 'static-v9';
+const CACHE_STATIC_NAME = 'static-v10.1';
 const CACHE_DYNAMIC_NAME = 'dynamic-v2';
 
 // access to the service workers with "self"
@@ -15,6 +15,7 @@ self.addEventListener('install', (event) => {
             cache.addAll([
                 '/', // cache request (index is accessible with root path)
                 '/index.html',
+                '/offline.html',
                 '/src/js/app.js',
                 '/src/js/feed.js',
                 '/src/js/promise.js',
@@ -80,8 +81,13 @@ self.addEventListener('fetch', (event) => {
                         return res
                     })
                 })
+                // if data can't be fetch
                 .catch(error => {
-                    
+                    // return the offline page which is cached
+                    return caches.open(CACHE_STATIC_NAME)
+                    .then(cache => {
+                        return cache.match('/offline.html');
+                    });
                 });
             }
         })
