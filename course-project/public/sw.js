@@ -1,4 +1,4 @@
-const CACHE_STATIC_NAME = 'static-v6';
+const CACHE_STATIC_NAME = 'static-v9';
 const CACHE_DYNAMIC_NAME = 'dynamic-v2';
 
 // access to the service workers with "self"
@@ -75,7 +75,7 @@ self.addEventListener('fetch', (event) => {
                     .then(cache => {
                         // res is instant consumed so it will be null, 
                         // use clone to get an clone of it with all data
-                        // cache.put(event.request.url, res.clone());
+                        cache.put(event.request.url, res.clone());
                         // return original res anyway
                         return res
                     })
