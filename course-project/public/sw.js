@@ -1,3 +1,6 @@
+const CACHE_STATIC_NAME = 'static-v4';
+const CACHE_DYNAMIC_NAME = 'dynamic-v2';
+
 // access to the service workers with "self"
 self.addEventListener('install', (event) => {
     console.log('[Service Worker] Installing Service Workers ...', event);
@@ -5,7 +8,7 @@ self.addEventListener('install', (event) => {
     event.waitUntil(
         // open a new cache if exists or create a new one and name it like we want
         // give version number to cache and update it each time the application's code is edited to force refresh
-        caches.open('static-v2')
+        caches.open(CACHE_STATIC_NAME)
         .then((cache) => {
             console.log('[Service Worker] Precaching App Shell');
             // add path to the files that need to be stored in the cache (relative from web root file)
@@ -29,9 +32,22 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// need to close the tab or unregister to activate sw
+// when user close the tab or unregister, a new cache is activated next time
 self.addEventListener('activate', (event) => {
     console.log('[Service Worker] Activating Service Workers ...', event);
+    // wait for all previous events before clean up
+    event.waitUntil(
+        // get all existing keys in ou cache
+        caches.keys()
+        .then(keyList => {
+            return Promise.all(keyList.map(keyItem => {
+                if(keyItem !== CACHE_STATIC_NAME && keyItem !== CACHE_DYNAMIC_NAME) {
+                    console.log('[Service Worker] Removing old cache');
+                    return caches.delete(keyItem);
+                }
+            }))
+        })
+    );
     // to be sure that service workers are activated correctly and will not failed
     return self.clients.claim();
 });
@@ -55,7 +71,7 @@ self.addEventListener('fetch', (event) => {
                 return fetch(event.request)
                 .then(res => {
                     // dynamic store request in cache
-                    return caches.open('dynamic')
+                    return caches.open(CACHE_DYNAMIC_NAME)
                     .then(cache => {
                         // res is instant consumed so it will be null, 
                         // use clone to get an clone of it with all data
