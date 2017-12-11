@@ -88,7 +88,17 @@ function createCard() {
 var url = 'https://httpbin.org/get';
 var isFromNetwork = false;
 
-fetch(url)
+// fetch(url)
+fetch(url, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    },
+    body: JSON.stringify({
+        message: 'A message'
+    })
+})
 .then(function(res) {
     return res.json();
 })
