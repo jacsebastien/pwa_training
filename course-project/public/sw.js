@@ -1,4 +1,4 @@
-const CACHE_STATIC_NAME = 'static-v13';
+const CACHE_STATIC_NAME = 'static-v13.1';
 const CACHE_DYNAMIC_NAME = 'dynamic-v3';
 const STATIC_FILES = [
     '/', // cache request (index is accessible with root path)
@@ -115,9 +115,12 @@ self.addEventListener('fetch', (event) => {
                         })
                     })
                     .catch(error => {
+                        // if data can't be fetch                                            
                         return caches.open(CACHE_STATIC_NAME)
                         .then(cache => {
-                            if(event.request.url.indexOf('/help')) {
+                            // if the request is an HTML page
+                            if(event.request.headers.get('accept').includes('text/html')) {
+                                // return the offline page which is cached                                
                                 return cache.match('/offline.html');
                             }
                         });
