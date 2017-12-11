@@ -1,5 +1,5 @@
 const CACHE_STATIC_NAME = 'static-v13';
-const CACHE_DYNAMIC_NAME = 'dynamic-v2.1';
+const CACHE_DYNAMIC_NAME = 'dynamic-v3';
 
 // access to the service workers with "self"
 self.addEventListener('install', (event) => {
@@ -55,19 +55,51 @@ self.addEventListener('activate', (event) => {
 
 // Cache then Network strategy
 self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        // first get from cache
-        caches.open(CACHE_DYNAMIC_NAME)
-        .then(cache => {
-            // then make the request
-            return fetch(event.request)
-            .then(res => {
-                // and store the response in the cache with updated data
-                cache.put(event.request, res.clone());
-                return res;
+    var url = 'https://httpbin.org/get';
+    
+    // if request corresponds to the url
+    if(event.request.url.indexOf(url) > -1) {
+        // use cache then network
+        event.respondWith(
+            // first get from cache
+            caches.open(CACHE_DYNAMIC_NAME)
+            .then(cache => {
+                // then make the request
+                return fetch(event.request)
+                .then(res => {
+                    // and store the response in the cache with updated data
+                    cache.put(event.request, res.clone());
+                    return res;
+                })
             })
-        })
-    );
+        );
+    } else {
+        // use cache with network fallback
+        event.respondWith(
+            caches.match(event.request) 
+            .then((response) => {
+                if(response) {
+                    return response;
+                } else {
+                    return fetch(event.request)
+                    .then(res => {
+                        return caches.open(CACHE_DYNAMIC_NAME)
+                        .then(cache => {
+                            cache.put(event.request.url, res.clone());
+                            return res
+                        })
+                    })
+                    .catch(error => {
+                        return caches.open(CACHE_STATIC_NAME)
+                        .then(cache => {
+                            return cache.match('/offline.html');
+                        });
+                    });
+                }
+            })
+        );
+    }
+    
 });
 
 // Cache with network fallback strategy
