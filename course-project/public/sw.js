@@ -1,5 +1,21 @@
 const CACHE_STATIC_NAME = 'static-v13';
 const CACHE_DYNAMIC_NAME = 'dynamic-v3';
+const STATIC_FILES = [
+    '/', // cache request (index is accessible with root path)
+    '/index.html',
+    '/offline.html',
+    '/src/js/app.js',
+    '/src/js/feed.js',
+    '/src/js/promise.js',
+    '/src/js/fetch.js',
+    '/src/js/material.min.js',
+    '/src/css/app.css',
+    '/src/css/feed.css',
+    '/src/images/main-image.jpg',
+    'https://fonts.googleapis.com/css?family=Roboto:400,700',
+    'https://fonts.googleapis.com/icon?family=Material+Icons',
+    'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css'
+];
 
 // access to the service workers with "self"
 self.addEventListener('install', (event) => {
@@ -12,22 +28,7 @@ self.addEventListener('install', (event) => {
         .then((cache) => {
             console.log('[Service Worker] Precaching App Shell');
             // add path to the files that need to be stored in the cache (relative from web root file)
-            cache.addAll([
-                '/', // cache request (index is accessible with root path)
-                '/index.html',
-                '/offline.html',
-                '/src/js/app.js',
-                '/src/js/feed.js',
-                '/src/js/promise.js',
-                '/src/js/fetch.js',
-                '/src/js/material.min.js',
-                '/src/css/app.css',
-                '/src/css/feed.css',
-                '/src/images/main-image.jpg',
-                'https://fonts.googleapis.com/css?family=Roboto:400,700',
-                'https://fonts.googleapis.com/icon?family=Material+Icons',
-                'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css'
-            ]); 
+            cache.addAll(STATIC_FILES); 
             // cache.add('/index.html');
         })
     );
@@ -73,6 +74,12 @@ self.addEventListener('fetch', (event) => {
                 })
             })
         );
+    // if the url match with any of the words in static urls array (urls that are pre-cached)
+    } else if(new RegExp('\\b' + STATIC_FILES.join('\\b|\\b') + '\\b').test(event.request.url)) {
+        // use cache only strategy
+        event.respondWith(
+            caches.match(event.request)
+        );
     } else {
         // use cache with network fallback
         event.respondWith(
@@ -92,7 +99,9 @@ self.addEventListener('fetch', (event) => {
                     .catch(error => {
                         return caches.open(CACHE_STATIC_NAME)
                         .then(cache => {
-                            return cache.match('/offline.html');
+                            if(event.request.url.indexOf('/help')) {
+                                return cache.match('/offline.html');
+                            }
                         });
                     });
                 }
