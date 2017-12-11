@@ -1,5 +1,5 @@
-const CACHE_STATIC_NAME = 'static-v12';
-const CACHE_DYNAMIC_NAME = 'dynamic-v2';
+const CACHE_STATIC_NAME = 'static-v13';
+const CACHE_DYNAMIC_NAME = 'dynamic-v2.1';
 
 // access to the service workers with "self"
 self.addEventListener('install', (event) => {
@@ -53,6 +53,23 @@ self.addEventListener('activate', (event) => {
     return self.clients.claim();
 });
 
+// Cache then Network strategy
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        // first get from cache
+        caches.open(CACHE_DYNAMIC_NAME)
+        .then(cache => {
+            // then make the request
+            return fetch(event.request)
+            .then(res => {
+                // and store the response in the cache with updated data
+                cache.put(event.request, res.clone());
+                return res;
+            })
+        })
+    );
+});
+
 // Cache with network fallback strategy
 // triggered each time page try to load resources (css/script/images) 
 // or when we manually send fetch request from js
@@ -96,22 +113,21 @@ self.addEventListener('activate', (event) => {
 // });
 
 // Network with cache fallback strategy
-self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        fetch(event.request)
-        .then(response => {
-            return caches.open(CACHE_DYNAMIC_NAME)
-            .then(cache => {
-                cache.put(event.request.url, res.clone());
-                return res
-            })
-        })
-        .catch(err => {
-            return caches.match(event.request)
-        })
-    );
-});
-
+// self.addEventListener('fetch', (event) => {
+//     event.respondWith(
+//         fetch(event.request)
+//         .then(response => {
+//             return caches.open(CACHE_DYNAMIC_NAME)
+//             .then(cache => {
+//                 cache.put(event.request.url, response.clone());
+//                 return response;
+//             })
+//         })
+//         .catch(err => {
+//             return caches.match(event.request)
+//         })
+//     );
+// });
 
 // Cache only strategy
 // self.addEventListener('fetch', (event) => {
